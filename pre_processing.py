@@ -23,7 +23,7 @@ def one_hot_encoding(image_data):
         return [0, 1]
 
 
-def create_training_data(images_path='create_mole_data/images/', limit=None):
+def create_training_data(images_path='create_mole_data/images/', limit=None,size=80):
     images = []
     labels = []
     images_data = get_images(images_path)
@@ -31,7 +31,6 @@ def create_training_data(images_path='create_mole_data/images/', limit=None):
     for idx, image_data in enumerate(images_data):
         img_path = images_path + image_data
         img = cv2.imread(img_path, 0)  # 0 for grayscale
-        size = 80
         img = cv2.resize(img, (size, size))
         images.append(img)
         labels.append(one_hot_encoding(image_data))
@@ -55,7 +54,7 @@ def visualize_images(images, labels):
 
 
 if __name__ == '__main__':
-    images, labels = create_training_data()
+    images, labels = create_training_data(size=40)
     # https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html
     np.save('images.npy', images)
     np.save('labels.npy', labels)

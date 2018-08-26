@@ -12,11 +12,11 @@ LABEL_SAVE_PATH = '{}/labels/'.format(os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == '__main__':
     offset_step = 2500
-    start_from = 10000
+    start_from = 0
 
     benign_malignant_counter = {
-        'benign': 2501,
-        'malignant': 498
+        'benign': 1,
+        'malignant': 1
     }
 
     for i in range(start_from, 30000, offset_step):
