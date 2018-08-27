@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import random
 import os
-from pre_processing import visualize_images
+from pre_processing import visualize_images, create_prediction_image
 
 
 # 3 conv layers , 1 dense layer in between and 1 output layer
@@ -47,12 +47,29 @@ def chunks(images, labels, n):
 def split_training_and_testing(images, labels, training_percantage=0.8):
     set_length = len(images)
     training_length = int(set_length * training_percantage)
+    training_images = []
+    training_labels = []
+    testing_images = []
+    testing_labels = []
 
-    training_images = images[:training_length]
-    training_labels = labels[:training_length]
-    testing_images = images[training_length:]
-    testing_labels = labels[training_length:]
+    benign_images = []
+    benign_labels = []
+    malignant_images = []
+    malignant_labels = []
 
+    for i in range(len(images)):
+        if np.array_equal([1, 0], labels[i]):
+            benign_images.append(images[i])
+            benign_labels.append(labels[i])
+
+        if np.array_equal([0, 1], labels[i]):
+            malignant_images.append(images[i])
+            malignant_labels.append(labels[i])
+
+    training_images = np.array(benign_images[:training_length // 2] + malignant_images[:training_length // 2])
+    testing_images = np.array(benign_images[training_length // 2:] + malignant_images[training_length // 2:])
+    training_labels = np.array(benign_labels[:training_length // 2] + malignant_labels[:training_length // 2])
+    testing_labels = np.array(benign_labels[training_length // 2:] + malignant_labels[training_length // 2:])
     return training_images, training_labels, testing_images, testing_labels
 
 
@@ -60,7 +77,9 @@ def randomize_two_lists(images, labels):
     # shuffle lists but maintain order
     combined = list(zip(images, labels))
     random.shuffle(combined)
-    images[:], labels[:] = zip(*combined)
+    images, labels = zip(*combined)
+    images = np.array(images)
+    labels = np.array(labels)
     return images, labels
 
 
@@ -80,6 +99,17 @@ def display_wrong_images(images, labels, predictions, image_count=10):
     visualize_images(images_to_display, labels_to_display)
 
 
+def check_positive_negative_count(labels):
+    positive = 0
+    negative = 0
+    for elem in labels:
+        if np.array_equal([1, 0], elem):
+            negative += 1
+        else:
+            positive += 1
+    print(positive, negative)
+
+
 if __name__ == '__main__':
 
     learning_rate = 0.001
@@ -88,13 +118,13 @@ if __name__ == '__main__':
     num_input = img_size * img_size  # input is 1D instead of 2D like an image
     num_classes = 2
     epochs = 10
-    dropout = 0.5  # prob to keep units (model tends to overfit, control this with this param)
+    dropout = 0.8  # prob to keep units (model tends to overfit, control this with this param)
     logs_path = 'logs/'
 
     # network architecture params
-    output_1 = 128
-    output_2 = 256
-    output_3 = 512
+    output_1 = 64
+    output_2 = 128
+    output_3 = 256
     output_4 = 512
     conv_size = 3  # dont pick to big, it slows the network down but does not provide big benefits
 
@@ -102,6 +132,7 @@ if __name__ == '__main__':
     Y = tf.placeholder(tf.float32, [None, num_classes])
     keep_prob = tf.placeholder(tf.float32)  # dropout
 
+    #CNN settings
     weights = {
         # 5*5 conv with 1 input 32 outputs
         'wc1': tf.Variable(tf.random_normal([conv_size, conv_size, 1, output_1])),  # image res 80*80 just as example
@@ -139,7 +170,6 @@ if __name__ == '__main__':
     images, labels = randomize_two_lists(images, labels)
     training_images, training_labels, testing_images, testing_labels = split_training_and_testing(images, labels,
                                                                                                   training_percantage=0.9)
-
     tmp_testing_images = testing_images.reshape(-1, img_size * img_size)
 
     model_name = 'model_{}_{}_{}_{}_{}_{}_{}_{}'.format(learning_rate, output_1, output_2, output_3, output_4,
@@ -152,38 +182,66 @@ if __name__ == '__main__':
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
 
+    mode = 'TRAIN'
     with tf.Session() as sess:
         sess.run(init)
 
         try:
             saver.restore(sess, model_path)
+            print('Loaded model')
         except ValueError as e:
             print('{} \nStarting from 0!'.format(e))
 
-        summary_writer = tf.summary.FileWriter(logs_path + model_name + '/', graph=tf.get_default_graph(),
-                                               flush_secs=60)
-        for epoch in range(epochs):
-            training_images, training_labels = randomize_two_lists(training_images, training_labels)
-            for batch_x, batch_y in chunks(training_images, training_labels, batch_size):
-                batch_x = batch_x.reshape(-1, img_size * img_size)  # 25600
-                sess.run(train_op, feed_dict={X: batch_x, Y: batch_y, keep_prob: dropout})
+        if mode == 'PREDICT':
+            image_to_predict = create_prediction_image('transfer_learning_model/test_images/test3.JPG')
+            image_to_predict = image_to_predict.reshape(-1, img_size * img_size)
+            logit, pred = sess.run([logits, prediction], feed_dict={X: image_to_predict, keep_prob: 1.0})
+            print(logit, pred[0])
 
-            # get in sample accuracy
-            tmp_training_images = training_images.reshape(-1, img_size * img_size)
-            in_sample_loss, in_sample_acc = sess.run([loss_op, accuracy],
-                                                     feed_dict={X: tmp_training_images, Y: training_labels,
-                                                                keep_prob: 1.0})
+        if mode == 'MULTI_PREDICT':
+            images_folder = '/Users/egeozsoy/Documents/mole_cancer_images/malignant/'
+            images_to_predict = []
+            counter = 100
+            for image_to_predict in os.listdir(images_folder):
+                if counter <= 0:
+                    break
+                if '.jpg' in image_to_predict or '.JPG' in image_to_predict:
+                    images_to_predict.append(create_prediction_image(images_folder + image_to_predict))
+                    # print(image_to_predict)
+                    counter -= 1
+            images_to_predict = np.array(images_to_predict).reshape(-1, img_size * img_size)
+            pred = sess.run(prediction, feed_dict={X: images_to_predict, keep_prob: 1.0})
+            print(pred)
 
-            # get out of sample accuracy
-            loss, acc, summary, pred = sess.run([loss_op, accuracy, merged_summary_op, prediction],
-                                                feed_dict={X: tmp_testing_images, Y: testing_labels, keep_prob: 1.0})
-            # display_wrong_images(testing_images,testing_labels,pred)
-            summary_writer.add_summary(summary, epoch)
-            print("Completed {}".format(epoch),
-                  "Minibatch Loss= " + "{:.1f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(
-                      acc) + ", In sample loss= {:.1f} , in sample acc= {:.3f}".format(in_sample_loss, in_sample_acc))
+        else:
 
-            save_path = saver.save(sess, model_path)
-            # print("Model saved in file: %s" % save_path)
+            summary_writer = tf.summary.FileWriter(logs_path + model_name + '/', graph=tf.get_default_graph(),
+                                                   flush_secs=60)
+            for epoch in range(epochs):
+                training_images, training_labels = randomize_two_lists(training_images, training_labels)
+                for batch_x, batch_y in chunks(training_images, training_labels, batch_size):
+                    batch_x = batch_x.reshape(-1, img_size * img_size)
+                    sess.run(train_op, feed_dict={X: batch_x, Y: batch_y, keep_prob: dropout})
 
-        print("Optimization Finished!")
+                # get in sample accuracy
+                tmp_training_images = training_images.reshape(-1, img_size * img_size)
+                in_sample_loss, in_sample_acc = sess.run([loss_op, accuracy],
+                                                         feed_dict={X: tmp_training_images, Y: training_labels,
+                                                                    keep_prob: 1.0})
+
+                # pred = sess.run(prediction,feed_dict={X: tmp_testing_images, keep_prob: 1.0})
+                # get out of sample accuracy
+                loss, acc, summary, pred = sess.run([loss_op, accuracy, merged_summary_op, prediction],
+                                                    feed_dict={X: tmp_testing_images, Y: testing_labels,
+                                                               keep_prob: 1.0})
+                # display_wrong_images(testing_images,testing_labels,pred)
+                summary_writer.add_summary(summary, epoch)
+                print("Completed {}".format(epoch),
+                      "Minibatch Loss= " + "{:.1f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(
+                          acc) + ", In sample loss= {:.1f} , in sample acc= {:.3f}".format(in_sample_loss,
+                                                                                           in_sample_acc))
+
+                save_path = saver.save(sess, model_path)
+                # print("Model saved in file: %s" % save_path)
+
+            print("Optimization Finished!")

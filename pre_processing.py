@@ -23,7 +23,7 @@ def one_hot_encoding(image_data):
         return [0, 1]
 
 
-def create_training_data(images_path='create_mole_data/images/', limit=None,size=80):
+def create_training_data(images_path='create_mole_data/images/', limit=None, size=80):
     images = []
     labels = []
     images_data = get_images(images_path)
@@ -41,6 +41,16 @@ def create_training_data(images_path='create_mole_data/images/', limit=None,size
                 print(idx)
 
     return images, labels
+
+
+def create_prediction_image(image_file_path, img_size=40):
+    try:
+        img = cv2.imread(image_file_path, 0)
+        img = cv2.resize(img, (img_size, img_size))
+        return img
+    except Exception as e:
+        print(e)
+        return None
 
 
 def visualize_images(images, labels):

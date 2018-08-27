@@ -1,4 +1,5 @@
 tensorflow
+tensorflow-hub
 Pillow
 opencv-python
 requests
