@@ -64,7 +64,7 @@ def visualize_images(images, labels):
 
 
 if __name__ == '__main__':
-    images, labels = create_training_data(size=40)
+    images, labels = create_training_data(size=80)
     # https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html
     np.save('images.npy', images)
     np.save('labels.npy', labels)

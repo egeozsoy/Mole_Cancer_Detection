@@ -114,18 +114,18 @@ if __name__ == '__main__':
 
     learning_rate = 0.001
     batch_size = 128
-    img_size = 40
+    img_size = 80
     num_input = img_size * img_size  # input is 1D instead of 2D like an image
     num_classes = 2
-    epochs = 10
+    epochs = 25
     dropout = 0.8  # prob to keep units (model tends to overfit, control this with this param)
     logs_path = 'logs/'
 
     # network architecture params
-    output_1 = 64
-    output_2 = 128
-    output_3 = 256
-    output_4 = 512
+    output_1 = 128
+    output_2 = 256
+    output_3 = 512
+    output_4 = 1024
     conv_size = 3  # dont pick to big, it slows the network down but does not provide big benefits
 
     X = tf.placeholder(tf.float32, [None, num_input])
@@ -226,15 +226,17 @@ if __name__ == '__main__':
                 # get in sample accuracy
                 tmp_training_images = training_images.reshape(-1, img_size * img_size)
                 in_sample_loss, in_sample_acc = sess.run([loss_op, accuracy],
-                                                         feed_dict={X: tmp_training_images, Y: training_labels,
+                                                         feed_dict={X: tmp_training_images[0:batch_size], Y: training_labels[0:batch_size],
                                                                     keep_prob: 1.0})
 
                 # pred = sess.run(prediction,feed_dict={X: tmp_testing_images, keep_prob: 1.0})
                 # get out of sample accuracy
+                #dont let to big data for testing or training
                 loss, acc, summary, pred = sess.run([loss_op, accuracy, merged_summary_op, prediction],
-                                                    feed_dict={X: tmp_testing_images, Y: testing_labels,
+                                                    feed_dict={X: tmp_testing_images[0:batch_size], Y: testing_labels[0:batch_size],
                                                                keep_prob: 1.0})
                 # display_wrong_images(testing_images,testing_labels,pred)
+                # break
                 summary_writer.add_summary(summary, epoch)
                 print("Completed {}".format(epoch),
                       "Minibatch Loss= " + "{:.1f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(
