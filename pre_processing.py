@@ -43,7 +43,7 @@ def create_training_data(images_path='create_mole_data/images/', limit=None, siz
     return images, labels
 
 
-def create_prediction_image(image_file_path, img_size=40):
+def create_prediction_image(image_file_path, img_size=80):
     try:
         img = cv2.imread(image_file_path, 0)
         img = cv2.resize(img, (img_size, img_size))
@@ -64,7 +64,7 @@ def visualize_images(images, labels):
 
 
 if __name__ == '__main__':
-    images, labels = create_training_data(size=80)
+    images, labels = create_training_data(size=128)
     # https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html
     np.save('images.npy', images)
     np.save('labels.npy', labels)

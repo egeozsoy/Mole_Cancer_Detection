@@ -113,19 +113,19 @@ def check_positive_negative_count(labels):
 if __name__ == '__main__':
 
     learning_rate = 0.001
-    batch_size = 128
-    img_size = 80
+    batch_size = 64
+    img_size = 128
     num_input = img_size * img_size  # input is 1D instead of 2D like an image
     num_classes = 2
     epochs = 25
-    dropout = 0.8  # prob to keep units (model tends to overfit, control this with this param)
+    dropout = 0.9  # prob to keep =units (model tends to overfit, control this with this param)
     logs_path = 'logs/'
 
     # network architecture params
     output_1 = 128
     output_2 = 256
     output_3 = 512
-    output_4 = 1024
+    output_4 = 2048
     conv_size = 3  # dont pick to big, it slows the network down but does not provide big benefits
 
     X = tf.placeholder(tf.float32, [None, num_input])
@@ -199,7 +199,7 @@ if __name__ == '__main__':
             print(logit, pred[0])
 
         if mode == 'MULTI_PREDICT':
-            images_folder = '/Users/egeozsoy/Documents/mole_cancer_images/malignant/'
+            images_folder = 'transfer_learning_model/test_images/'
             images_to_predict = []
             counter = 100
             for image_to_predict in os.listdir(images_folder):
