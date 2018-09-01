@@ -21,7 +21,12 @@ def conv_net(x, weights, biases, dropout):
     conv2 = tf.nn.relu(conv2)
     conv2 = tf.nn.max_pool(conv2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-    fc1 = tf.reshape(conv2,
+    conv3 = tf.nn.conv2d(conv2, weights['wc3'], strides=[1, 1, 1, 1], padding='SAME')
+    conv3 = tf.nn.bias_add(conv3, biases['bc3'])
+    conv3 = tf.nn.relu(conv3)
+    conv3 = tf.nn.max_pool(conv3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
+    fc1 = tf.reshape(conv3,
                      [-1, weights['wd1'].get_shape().as_list()[0]])  # flatten conv to dense -> 4D tensor to 2D tensor
     fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
     fc1 = tf.nn.relu(fc1)
@@ -108,18 +113,19 @@ def check_positive_negative_count(labels):
 if __name__ == '__main__':
 
     learning_rate = 0.001
-    batch_size = 128
-    img_size = 64
+    batch_size = 1024
+    img_size = 40
     num_input = img_size * img_size  # input is 1D instead of 2D like an image
     num_classes = 2
-    epochs = 200
-    dropout = 1.0 # prob to keep =units (model tends to overfit, control this with this param)
+    epochs = 20
+    dropout = 0.9  # prob to keep =units (model tends to overfit, control this with this param)
     logs_path = 'logs/'
 
     # network architecture params
-    output_1 = 64
-    output_2 = 64
-    output_3 = 64
+    output_1 = 128
+    output_2 = 128
+    output_3 = 128
+    output_4 = 1024
     conv_size = 3  # dont pick to big, it slows the network down but does not provide big benefits
 
     X = tf.placeholder(tf.float32, [None, num_input])
@@ -129,22 +135,24 @@ if __name__ == '__main__':
     #CNN settings
     weights = {
         # 5*5 conv with 1 input 32 outputs
-        'wc1': tf.Variable(tf.random_normal([conv_size, conv_size, 1, output_1])),  # image res 80*80  -> 40*40
-        'wc2': tf.Variable(tf.random_normal([conv_size, conv_size, output_1, output_2])),  # image res 40*40 -> 20*20
-        'wd1': tf.Variable(tf.random_normal([img_size // 4 * img_size // 4 * output_2, output_3])),  # image res 20*20 -> 10*10
-        'out': tf.Variable(tf.random_normal([output_3, num_classes]))
+        'wc1': tf.Variable(tf.random_normal([conv_size, conv_size, 1, output_1])),  # image res 80*80 just as example
+        'wc2': tf.Variable(tf.random_normal([conv_size, conv_size, output_1, output_2])),  # image res 40*40
+        'wc3': tf.Variable(tf.random_normal([conv_size, conv_size, output_2, output_3])),  # image res 20*20
+        'wd1': tf.Variable(tf.random_normal([img_size // 8 * img_size // 8 * output_3, output_4])),  # image res 10*10
+        'out': tf.Variable(tf.random_normal([output_4, num_classes]))
     }
     biases = {
         'bc1': tf.Variable(tf.random_normal([output_1])),
         'bc2': tf.Variable(tf.random_normal([output_2])),
-        'bd1': tf.Variable(tf.random_normal([output_3])),
+        'bc3': tf.Variable(tf.random_normal([output_3])),
+        'bd1': tf.Variable(tf.random_normal([output_4])),
         'out': tf.Variable(tf.random_normal([num_classes]))
     }
 
     logits = conv_net(X, weights, biases, keep_prob)
-    #use softmax if not binary classification
-    prediction = tf.nn.sigmoid(logits)
-    loss_op = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=Y))
+    prediction = tf.nn.softmax(logits)
+
+    loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=Y))
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(loss_op)
     tf.summary.scalar("loss", loss_op)
@@ -164,9 +172,7 @@ if __name__ == '__main__':
                                                                                                   training_percantage=0.9)
     tmp_testing_images = testing_images.reshape(-1, img_size * img_size)
 
-
-
-    model_name = '2_conv_model_{}_{}_{}_{}_{}_{}_{}_{}'.format(learning_rate, output_1, output_2, output_3, output_3,
+    model_name = '3_conv_model_{}_{}_{}_{}_{}_{}_{}_{}'.format(learning_rate, output_1, output_2, output_3, output_4,
                                                         conv_size, dropout,
                                                         img_size
                                                         )
@@ -187,7 +193,7 @@ if __name__ == '__main__':
             print('{} \nStarting from 0!'.format(e))
 
         if mode == 'PREDICT':
-            image_to_predict = create_prediction_image('create_mole_data/images/benign_6.jpg')
+            image_to_predict = create_prediction_image('transfer_learning_model/test_images/test3.JPG')
             image_to_predict = image_to_predict.reshape(-1, img_size * img_size)
             logit, pred = sess.run([logits, prediction], feed_dict={X: image_to_predict, keep_prob: 1.0})
             print(logit, pred[0])
