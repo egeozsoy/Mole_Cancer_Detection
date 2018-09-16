@@ -8,8 +8,6 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 from neural_network import randomize_two_lists
 
-import pickle
-
 images = np.load('images.npy')
 images = np.divide(images, 255)  # normalize
 labels = np.load('labels.npy')

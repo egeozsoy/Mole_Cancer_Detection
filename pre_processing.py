@@ -5,6 +5,7 @@ import cv2
 from matplotlib import pyplot as plt
 from PIL import Image
 
+IMAGE_SIZE = 64
 
 def get_images(images_path='create_mole_data/images/'):
     images_data = []
@@ -23,13 +24,13 @@ def one_hot_encoding(image_data):
         return [0, 1]
 
 
-def create_training_data(images_path='create_mole_data/images/', limit=None, size=80):
+def create_training_data(images_path='create_mole_data/images', limit=None, size=80):
     images = []
     labels = []
     images_data = get_images(images_path)
 
     for idx, image_data in enumerate(images_data):
-        img_path = images_path + image_data
+        img_path = os.path.join(images_path,image_data)
         img = cv2.imread(img_path, 0)  # 0 for grayscale
         img = cv2.resize(img, (size, size))
         images.append(img)
@@ -64,7 +65,7 @@ def visualize_images(images, labels):
 
 
 if __name__ == '__main__':
-    images, labels = create_training_data(size=64)
+    images, labels = create_training_data(size=IMAGE_SIZE,images_path='/Users/egeozsoy/Documents/mole_cancer_images')
     # https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html
     np.save('images.npy', images)
     np.save('labels.npy', labels)

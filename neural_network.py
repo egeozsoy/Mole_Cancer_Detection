@@ -2,9 +2,9 @@ import tensorflow as tf
 import numpy as np
 import random
 import os
-from pre_processing import visualize_images, create_prediction_image
+from pre_processing import visualize_images, create_prediction_image,IMAGE_SIZE
 
-
+#evolutinary algorithms can also be considered here
 # 3 conv layers , 1 dense layer in between and 1 output layer
 def conv_net(x, weights, biases, dropout):
     x = tf.reshape(x, shape=[-1, img_size, img_size, 1])
@@ -107,9 +107,9 @@ def check_positive_negative_count(labels):
 
 if __name__ == '__main__':
 
-    learning_rate = 0.001
-    batch_size = 128
-    img_size = 64
+    learning_rate = 0.01
+    batch_size = 2048
+    img_size = IMAGE_SIZE
     num_input = img_size * img_size  # input is 1D instead of 2D like an image
     num_classes = 2
     epochs = 200
@@ -117,9 +117,9 @@ if __name__ == '__main__':
     logs_path = 'logs/'
 
     # network architecture params
-    output_1 = 64
-    output_2 = 64
-    output_3 = 64
+    output_1 = 32 #how many features to extract in the first step
+    output_2 = 64 #features to extract in the second step
+    output_3 = 1024*4 #currently overfits, can be adjusted with dropout
     conv_size = 3  # dont pick to big, it slows the network down but does not provide big benefits
 
     X = tf.placeholder(tf.float32, [None, num_input])
@@ -162,6 +162,8 @@ if __name__ == '__main__':
     images, labels = randomize_two_lists(images, labels)
     training_images, training_labels, testing_images, testing_labels = split_training_and_testing(images, labels,
                                                                                                   training_percantage=0.9)
+
+
     tmp_testing_images = testing_images.reshape(-1, img_size * img_size)
 
 
@@ -227,13 +229,13 @@ if __name__ == '__main__':
                 # get out of sample accuracy
                 #dont let to big data for testing or training
                 loss, acc, summary, pred = sess.run([loss_op, accuracy, merged_summary_op, prediction],
-                                                    feed_dict={X: tmp_testing_images, Y: testing_labels,
+                                                    feed_dict={X: tmp_testing_images[0:batch_size], Y: testing_labels[0:batch_size],
                                                                keep_prob: 1.0})
                 # display_wrong_images(testing_images,testing_labels,pred)
                 # break
                 summary_writer.add_summary(summary, epoch)
                 print("Completed {}".format(epoch),
-                      "Minibatch Loss= " + "{:.1f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(
+                      "Testing Loss= " + "{:.1f}".format(loss) + ", Testing acc= " + "{:.3f}".format(
                           acc) + ", In sample loss= {:.1f} , in sample acc= {:.3f}".format(in_sample_loss,
                                                                                            in_sample_acc))
 
