@@ -1,65 +1,16 @@
 import os
 
 import numpy as np
-
 from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy
-from torch.utils.data import Dataset
 from torchvision import transforms
-
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
-from skimage import io
 from matplotlib import pyplot as plt
 
-
-class MoleDataset(Dataset):
-
-    def __init__(self, image_paths, labels, transform=None):
-        self.image_paths = image_paths
-        self.labels = labels
-        self.transform = transform
-        self.c = 2
-
-    def __getitem__(self, index: int):
-        img_name = self.image_paths[index]
-        image = io.imread(img_name)
-        label = self.labels[index]
-
-        if self.transform:
-            image = self.transform(image)
-
-        return image, label
-
-    def __len__(self) -> int:
-        return len(self.image_paths)
-
+from mole_dataset import MoleDataset
 
 # --------- Start data processing -----------
-benign_path = '/Volumes/seagate 1/ML_Datasets/Mole_Cancer_ISIC/Data/benign'
-malignant_path = '/Volumes/seagate 1/ML_Datasets/Mole_Cancer_ISIC/Data/malignant'
-benign_files = []
-malignant_files = []
-modified_malignant_files = []
 
-for benign_file in os.listdir(benign_path):
-    if '.jpeg' in benign_file:
-        benign_files.append(os.path.join(benign_path, benign_file))
-
-for malignant_file in os.listdir(malignant_path):
-    if '.jpeg' in malignant_file:
-        malignant_files.append(os.path.join(malignant_path, malignant_file))
-
-# # we have two few malignant files
-while len(modified_malignant_files) < len(benign_files):
-    modified_malignant_files += malignant_files
-
-# make sure they are the same length
-modified_malignant_files = modified_malignant_files[:len(benign_files)]
-
-image_files = benign_files + modified_malignant_files
-labels = [0] * len(benign_files) + [1] * len(modified_malignant_files)
-
-image_files, labels = shuffle(image_files, labels)
 
 training_image_paths, testing_image_paths, training_labels, testing_labels = train_test_split(image_files, labels, random_state=42, test_size=0.1)
 # --------- End data processing ------------
