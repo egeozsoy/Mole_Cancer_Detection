@@ -1,0 +1,6 @@
+fastai
+torch
+scikit-learn
+scikit-image
+matplotlib
+torchvision
