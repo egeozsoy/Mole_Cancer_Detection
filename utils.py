@@ -1,5 +1,6 @@
 import os
 from sklearn.utils import shuffle
+# Paths define two constant, malignant_path and benign_path with absolute paths
 from paths import malignant_path, benign_path
 
 
