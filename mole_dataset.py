@@ -1,6 +1,5 @@
 from torch.utils.data import Dataset
-from skimage import io
-
+from PIL import Image
 
 class MoleDataset(Dataset):
 
@@ -12,7 +11,7 @@ class MoleDataset(Dataset):
 
     def __getitem__(self, index: int):
         img_name = self.image_paths[index]
-        image = io.imread(img_name)
+        image = Image.open(img_name)
         label = self.labels[index]
 
         if self.transform:

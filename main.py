@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 from mole_dataset import MoleDataset
 from utils import load_images_labels
-from configurations import find_best_lr, plot_images, train
+from configurations import find_best_lr, plot_images, train,unfreeze_cnn_layers
 
 if __name__ == '__main__':
     image_files, labels = load_images_labels()
@@ -21,11 +21,11 @@ if __name__ == '__main__':
     img_size = 224
 
     transform_train = transforms.Compose(
-        [transforms.ToPILImage(), transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
+        [transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
          ])
 
-    transform_test = transforms.Compose([transforms.ToPILImage(), transforms.Resize(size=(img_size, img_size)), transforms.ToTensor(),
+    transform_test = transforms.Compose([transforms.Resize(size=(img_size, img_size)), transforms.ToTensor(),
                                          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
                                          ])
     train_dataset = MoleDataset(training_image_paths, training_labels, transform=transform_train)
@@ -38,7 +38,12 @@ if __name__ == '__main__':
         data = ImageDataBunch.create(train_dataset, test_dataset, bs=64)
         learner = cnn_learner(data, models.resnet18, metrics=accuracy)
         # Either train the cnn layers or not
-        learner.unfreeze()
+        if unfreeze_cnn_layers:
+            learner.unfreeze()
+
+        total_params = sum(p.numel() for p in learner.model.parameters())
+        trainable_params = sum(p.numel() for p in learner.model.parameters() if p.requires_grad)
+        print(f'Total Paramaters: {total_params}, Trainable Parameters: {trainable_params}')
 
         # We can plot some images to take a look at them
         if plot_images:
@@ -56,7 +61,7 @@ if __name__ == '__main__':
             fig = learner.recorder.plot(return_fig=True)
             plt.show()
 
-        learner.fit_one_cycle(1, 3e-5)  # other rates to try, 5e-07, 5e-06
+        learner.fit_one_cycle(5, 3e-5)  # other rates to try, 5e-07, 5e-06
         # Save it as a pytorch model, not as fastai model
         torch.save(learner.model, 'models/pytorch_model.pt')
 
