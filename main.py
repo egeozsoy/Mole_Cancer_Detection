@@ -9,16 +9,19 @@ from matplotlib import pyplot as plt
 
 from mole_dataset import MoleDataset
 from utils import load_images_labels
-from configurations import find_best_lr, plot_images, train,unfreeze_cnn_layers
+from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location
+from small_cnn import SmallCNN
 
 if __name__ == '__main__':
+
+    if not os.path.exists(cache_location):
+        os.mkdir(cache_location)
+
     image_files, labels = load_images_labels()
 
     training_image_paths, testing_image_paths, training_labels, testing_labels = train_test_split(image_files, labels, random_state=42, test_size=0.1)
 
     # TODO use kaggle preprocessing https://www.kaggle.com/ratthachat/aptos-updatedv14-preprocessing-ben-s-cropping
-
-    img_size = 224
 
     transform_train = transforms.Compose(
         [transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
