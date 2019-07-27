@@ -50,5 +50,9 @@ if __name__ == '__main__':
         fig = learner.recorder.plot(return_fig=True)
         plt.show()
 
-    learner.fit_one_cycle(10, 3e-5)  # other rates to try, 5e-07, 5e-06
-    learner.save()
+    learner.fit_one_cycle(5, 3e-5)  # other rates to try, 5e-07, 5e-06
+    learner.save('model.pth')
+
+# TODO Load as pytorch model
+
+# TODO apply transformations
