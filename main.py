@@ -36,7 +36,7 @@ if __name__ == '__main__':
         print('Training Model')
 
         # ---------------------Use FastAi for easier training with less boilerplate code---------------------
-        data = ImageDataBunch.create(train_dataset, test_dataset,bs=4)
+        data = ImageDataBunch.create(train_dataset, test_dataset)
 
         # Pytorch bug avoids us using mobilenet_v2
         # model  = torchvision.models.mobilenet_v2(num_classes=2)
