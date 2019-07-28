@@ -2,15 +2,23 @@ import os
 
 import torch
 from torchvision import transforms
+import fastai
+import fastprogress
 from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy,Learner
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
+from PIL import Image
 
 from mole_dataset import MoleDataset
 from utils import load_images_labels
 from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location
 
 if __name__ == '__main__':
+
+    # Disable progress bar if wanted
+    fastprogress.fastprogress.NO_BAR = True
+    master_bar, progress_bar = fastprogress.force_console_behavior()
+    fastai.basic_train.master_bar, fastai.basic_train.progress_bar = master_bar, progress_bar
 
     if not os.path.exists(cache_location):
         os.mkdir(cache_location)
@@ -45,7 +53,7 @@ if __name__ == '__main__':
         # learner = Learner(data=data,model=model)
 
         # resnet 34 achieved 91 after 5 epochs(still improving)
-        learner = cnn_learner(data, models.squeezenet1_1, metrics=accuracy)
+        learner = cnn_learner(data, models.resnet50, metrics=accuracy)
         # Either train the cnn layers or not
         if unfreeze_cnn_layers:
             print('Unfreezing Model')
@@ -77,8 +85,12 @@ if __name__ == '__main__':
 
         # ---------------------Stop using FastAi, return to native pytorch---------------------
 
-    model = torch.load('models/pytorch_model.pt')
-    print('Do stuff with model')
-    print(model)
-
-# TODO apply transformations to new data
+    # actually remove some images from dataset so they are never seen
+    model = torch.load('models/pytorch_model.pt',map_location='cpu')
+    new_image_path = '224_cached_images/malignant/ISIC_0000002.jpeg'
+    new_image = Image.open(new_image_path)
+    scores = model(transform_test(new_image).unsqueeze(0))
+    prediction = int(torch.argmax(scores))
+    prediction_str = 'benign' if prediction == 0 else 'malignant'
+    print(prediction_str.capitalize())
+    print(scores.detach().numpy())
