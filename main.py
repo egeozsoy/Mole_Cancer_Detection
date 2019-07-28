@@ -14,6 +14,8 @@ if __name__ == '__main__':
 
     if not os.path.exists(cache_location):
         os.mkdir(cache_location)
+        os.mkdir(os.path.join(cache_location,'malignant'))
+        os.mkdir(os.path.join(cache_location, 'benign'))
 
     image_files, labels = load_images_labels()
 

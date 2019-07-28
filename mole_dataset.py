@@ -16,8 +16,11 @@ class MoleDataset(Dataset):
 
     def __getitem__(self, index: int):
         img_path = self.image_paths[index]
+        label = self.labels[index]
+
         img_name = img_path.rsplit('/', 1)[-1]
-        cache_path = os.path.join(cache_location, img_name)
+        label_str = 'benign' if label == 0 else 'malignant'
+        cache_path = os.path.join(cache_location, os.path.join(label_str,img_name))
 
         if os.path.exists(cache_path):
             image = Image.open(cache_path)
@@ -26,7 +29,6 @@ class MoleDataset(Dataset):
             image = image.resize((img_size, img_size))
             image.save(cache_path)
 
-        label = self.labels[index]
 
         if self.transform:
             image = self.transform(image)
