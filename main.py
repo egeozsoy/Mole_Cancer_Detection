@@ -1,16 +1,14 @@
 import os
 
-import numpy as np
-from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy
-from torchvision import transforms
 import torch
+from torchvision import transforms
+from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy,Learner
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 
 from mole_dataset import MoleDataset
 from utils import load_images_labels
 from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location
-from small_cnn import SmallCNN
 
 if __name__ == '__main__':
 
@@ -38,10 +36,17 @@ if __name__ == '__main__':
         print('Training Model')
 
         # ---------------------Use FastAi for easier training with less boilerplate code---------------------
-        data = ImageDataBunch.create(train_dataset, test_dataset, bs=64)
-        learner = cnn_learner(data, models.resnet18, metrics=accuracy)
+        data = ImageDataBunch.create(train_dataset, test_dataset,bs=4)
+
+        # Pytorch bug avoids us using mobilenet_v2
+        # model  = torchvision.models.mobilenet_v2(num_classes=2)
+        # learner = Learner(data=data,model=model)
+
+        # resnet 34 achieved 91 after 5 epochs(still improving)
+        learner = cnn_learner(data, models.squeezenet1_1, metrics=accuracy)
         # Either train the cnn layers or not
         if unfreeze_cnn_layers:
+            print('Unfreezing Model')
             learner.unfreeze()
 
         total_params = sum(p.numel() for p in learner.model.parameters())
@@ -64,7 +69,7 @@ if __name__ == '__main__':
             fig = learner.recorder.plot(return_fig=True)
             plt.show()
 
-        learner.fit_one_cycle(5, 3e-5)  # other rates to try, 5e-07, 5e-06
+        learner.fit_one_cycle(10, 3e-5)  # other rates to try, 5e-07, 5e-06
         # Save it as a pytorch model, not as fastai model
         torch.save(learner.model, 'models/pytorch_model.pt')
 
@@ -74,4 +79,4 @@ if __name__ == '__main__':
     print('Do stuff with model')
     print(model)
 
-# TODO apply transformations
+# TODO apply transformations to new data

@@ -1,2 +1,6 @@
 paths.py
 paths
+*cached_images/*
+models/*
+.idea/*
+__pycache__/*

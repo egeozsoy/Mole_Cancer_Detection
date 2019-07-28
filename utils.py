@@ -26,6 +26,7 @@ def load_images_labels():
     modified_malignant_files = modified_malignant_files[:len(benign_files)]
 
     image_files = benign_files + modified_malignant_files
+    # Create corresponding labels
     labels = [0] * len(benign_files) + [1] * len(modified_malignant_files)
 
     image_files, labels = shuffle(image_files, labels)
