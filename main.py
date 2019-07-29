@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from PIL import Image
 
 from mole_dataset import MoleDataset
-from utils import load_images_labels
+from utils import load_images_labels,BensProcessing
 from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location
 
 if __name__ == '__main__':
@@ -32,11 +32,11 @@ if __name__ == '__main__':
     # TODO use kaggle preprocessing https://www.kaggle.com/ratthachat/aptos-updatedv14-preprocessing-ben-s-cropping
 
     transform_train = transforms.Compose(
-        [transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
+        [transforms.RandomResizedCrop(size=(img_size, img_size),scale=(0.20,1.0)), transforms.RandomHorizontalFlip(), BensProcessing(),transforms.ToTensor(),
          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
          ])
 
-    transform_test = transforms.Compose([transforms.Resize(size=(img_size, img_size)), transforms.ToTensor(),
+    transform_test = transforms.Compose([transforms.Resize(size=(img_size, img_size)), BensProcessing(), transforms.ToTensor(),
                                          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
                                          ])
     train_dataset = MoleDataset(training_image_paths, training_labels, transform=transform_train)
@@ -77,18 +77,21 @@ if __name__ == '__main__':
             learner.lr_find()
             fig = learner.recorder.plot(return_fig=True)
             plt.show()
-
-        learner.fit_one_cycle(20, 3e-5)  # other rates to try, 5e-07, 5e-06
+            
+        lr = 3e-5
+        print(lr)
+        learner.fit_one_cycle(40, lr)
         # Save it as a pytorch model, not as fastai model
         torch.save(learner.model, 'models/pytorch_model.pt')
 
         # ---------------------Stop using FastAi, return to native pytorch---------------------
 
     model = torch.load('models/pytorch_model.pt', map_location='cpu')
-    new_image_path = '224_cached_images/malignant/ISIC_0000046.jpeg'
-    new_image = Image.open(new_image_path)
-    scores = model(transform_test(new_image).unsqueeze(0))
-    prediction = int(torch.argmax(scores))
-    prediction_str = 'benign' if prediction == 0 else 'malignant'
-    print(prediction_str.capitalize())
-    print(scores.detach().numpy())
+    for path in sorted(os.listdir('Test_Data')):
+        new_image_path = os.path.join('Test_Data',path)
+        new_image = Image.open(new_image_path)
+        scores = model(transform_test(new_image).unsqueeze(0))
+        prediction = int(torch.argmax(scores))
+        prediction_str = 'benign' if prediction == 0 else 'malignant'
+        print('{}: {}'.format(path,prediction_str.capitalize()))
+        # print(scores.detach().numpy())

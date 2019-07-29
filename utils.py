@@ -36,7 +36,7 @@ def load_images_labels():
 
     return image_files, labels
 
-# Currently not used
+# Currently used
 class BensProcessing(object):
     '''
     # https://www.kaggle.com/ratthachat/aptos-updatedv14-preprocessing-ben-s-cropping
