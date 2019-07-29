@@ -4,13 +4,13 @@ import torch
 from torchvision import transforms
 import fastai
 import fastprogress
-from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy,Learner
+from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy, Learner
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 from PIL import Image
 
 from mole_dataset import MoleDataset
-from utils import load_images_labels
+from utils import load_images_labels, BensProcessing
 from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location
 
 if __name__ == '__main__':
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(cache_location):
         os.mkdir(cache_location)
-        os.mkdir(os.path.join(cache_location,'malignant'))
+        os.mkdir(os.path.join(cache_location, 'malignant'))
         os.mkdir(os.path.join(cache_location, 'benign'))
 
     image_files, labels = load_images_labels()
@@ -32,11 +32,11 @@ if __name__ == '__main__':
     # TODO use kaggle preprocessing https://www.kaggle.com/ratthachat/aptos-updatedv14-preprocessing-ben-s-cropping
 
     transform_train = transforms.Compose(
-        [transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
+        [transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), BensProcessing(), transforms.ToTensor(),
          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
          ])
 
-    transform_test = transforms.Compose([transforms.Resize(size=(img_size, img_size)), transforms.ToTensor(),
+    transform_test = transforms.Compose([transforms.Resize(size=(img_size, img_size)), BensProcessing(), transforms.ToTensor(),
                                          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
                                          ])
     train_dataset = MoleDataset(training_image_paths, training_labels, transform=transform_train)
@@ -85,9 +85,8 @@ if __name__ == '__main__':
 
         # ---------------------Stop using FastAi, return to native pytorch---------------------
 
-    # actually remove some images from dataset so they are never seen
-    model = torch.load('models/pytorch_model.pt',map_location='cpu')
-    new_image_path = '224_cached_images/malignant/ISIC_0000002.jpeg'
+    model = torch.load('models/pytorch_model.pt', map_location='cpu')
+    new_image_path = '224_cached_images/malignant/ISIC_0000046.jpeg'
     new_image = Image.open(new_image_path)
     scores = model(transform_test(new_image).unsqueeze(0))
     prediction = int(torch.argmax(scores))

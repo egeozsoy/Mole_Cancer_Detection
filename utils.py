@@ -1,5 +1,8 @@
 import os
+
+import numpy as np
 from sklearn.utils import shuffle
+from PIL import ImageFilter
 # Paths define two constant, malignant_path and benign_path with absolute paths
 from paths import malignant_path, benign_path
 
@@ -32,3 +35,18 @@ def load_images_labels():
     image_files, labels = shuffle(image_files, labels)
 
     return image_files, labels
+
+
+class BensProcessing(object):
+    '''
+    # https://www.kaggle.com/ratthachat/aptos-updatedv14-preprocessing-ben-s-cropping
+    '''
+
+    def __call__(self, img):
+        blur_filter = ImageFilter.GaussianBlur(radius=10)
+        blurred = np.array(img.filter(blur_filter)).astype(np.float32)
+        img = np.array(img).astype(np.float32)
+
+        final_img = ((img * 4 + blurred * (-4)) + 128) / 255
+
+        return final_img
