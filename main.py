@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from PIL import Image
 
 from mole_dataset import MoleDataset
-from utils import load_images_labels, BensProcessing
+from utils import load_images_labels
 from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location
 
 if __name__ == '__main__':
@@ -32,11 +32,11 @@ if __name__ == '__main__':
     # TODO use kaggle preprocessing https://www.kaggle.com/ratthachat/aptos-updatedv14-preprocessing-ben-s-cropping
 
     transform_train = transforms.Compose(
-        [transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), BensProcessing(), transforms.ToTensor(),
+        [transforms.RandomResizedCrop(size=(img_size, img_size)), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
          ])
 
-    transform_test = transforms.Compose([transforms.Resize(size=(img_size, img_size)), BensProcessing(), transforms.ToTensor(),
+    transform_test = transforms.Compose([transforms.Resize(size=(img_size, img_size)), transforms.ToTensor(),
                                          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
                                          ])
     train_dataset = MoleDataset(training_image_paths, training_labels, transform=transform_train)
@@ -52,7 +52,6 @@ if __name__ == '__main__':
         # model  = torchvision.models.mobilenet_v2(num_classes=2)
         # learner = Learner(data=data,model=model)
 
-        # resnet 34 achieved 91 after 5 epochs(still improving)
         learner = cnn_learner(data, models.resnet50, metrics=accuracy)
         # Either train the cnn layers or not
         if unfreeze_cnn_layers:
@@ -79,7 +78,7 @@ if __name__ == '__main__':
             fig = learner.recorder.plot(return_fig=True)
             plt.show()
 
-        learner.fit_one_cycle(10, 3e-5)  # other rates to try, 5e-07, 5e-06
+        learner.fit_one_cycle(20, 3e-5)  # other rates to try, 5e-07, 5e-06
         # Save it as a pytorch model, not as fastai model
         torch.save(learner.model, 'models/pytorch_model.pt')
 
