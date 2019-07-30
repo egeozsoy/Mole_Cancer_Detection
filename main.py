@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # TODO use kaggle preprocessing https://www.kaggle.com/ratthachat/aptos-updatedv14-preprocessing-ben-s-cropping
 
     transform_train = transforms.Compose(
-        [transforms.RandomResizedCrop(size=(img_size, img_size),scale=(0.20,1.0)), transforms.RandomHorizontalFlip(), BensProcessing(),transforms.ToTensor(),
+        [transforms.RandomResizedCrop(size=(img_size, img_size),scale=(0.30,1.0)), transforms.RandomHorizontalFlip(), BensProcessing(),transforms.ToTensor(),
          # transforms.Normalize((0.7, 0.54, 0.50), (0.17, 0.17, 0.19))
          ])
 
