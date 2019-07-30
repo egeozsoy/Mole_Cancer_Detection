@@ -11,7 +11,7 @@ from PIL import Image
 
 from mole_dataset import MoleDataset
 from utils import load_images_labels,BensProcessing
-from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location
+from configurations import find_best_lr, plot_images, train, unfreeze_cnn_layers, img_size, cache_location,cache_segmentation_location
 
 if __name__ == '__main__':
 
@@ -24,6 +24,8 @@ if __name__ == '__main__':
         os.mkdir(cache_location)
         os.mkdir(os.path.join(cache_location, 'malignant'))
         os.mkdir(os.path.join(cache_location, 'benign'))
+    if not os.path.exists(cache_segmentation_location):
+        os.mkdir(cache_segmentation_location)
 
     image_files, labels = load_images_labels()
 

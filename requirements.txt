@@ -3,3 +3,4 @@ torchvision
 fastai
 matplotlib
 scikit-learn
+onnx-coreml
