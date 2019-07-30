@@ -82,7 +82,7 @@ if __name__ == '__main__':
             
         lr = 3e-5
         print(lr)
-        learner.fit_one_cycle(40, lr)
+        learner.fit_one_cycle(20, lr)
         # Save it as a pytorch model, not as fastai model
         torch.save(learner.model, 'models/pytorch_model.pt')
 
