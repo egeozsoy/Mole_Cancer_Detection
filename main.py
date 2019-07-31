@@ -4,7 +4,7 @@ import torch
 from torchvision import transforms
 import fastai
 import fastprogress
-from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy, Learner
+from fastai.vision import ImageDataBunch, models, cnn_learner, accuracy
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 from PIL import Image
@@ -49,10 +49,6 @@ if __name__ == '__main__':
 
         # ---------------------Use FastAi for easier training with less boilerplate code---------------------
         data = ImageDataBunch.create(train_dataset, test_dataset)
-
-        # Pytorch bug avoids us using mobilenet_v2
-        # model  = torchvision.models.mobilenet_v2(num_classes=2)
-        # learner = Learner(data=data,model=model)
 
         learner = cnn_learner(data, models.resnet50, metrics=accuracy)
         # Either train the cnn layers or not
