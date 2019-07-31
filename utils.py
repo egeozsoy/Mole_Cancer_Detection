@@ -36,6 +36,7 @@ def load_images_labels():
 
     return image_files, labels
 
+
 # Currently used
 class BensProcessing(object):
     '''

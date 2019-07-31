@@ -1,6 +1,7 @@
 paths.py
 paths
-*cached_/*
+*cached_*/*
 models/*
 .idea/*
+Test_Data/*
 __pycache__/*
